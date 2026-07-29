@@ -1,0 +1,1 @@
+API_KEY = "your_alphavantage_api_key_here"
