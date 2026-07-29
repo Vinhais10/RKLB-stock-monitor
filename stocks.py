@@ -7,25 +7,25 @@ from config import API_KEY
 
 symbol = "RKLB"
 api_key = API_KEY
-UPDATE_INTERVAL_SECONDS = 300  # Time between fresh API data pulls (keep >= 300 to respect the 25 req/day limit)
-HEARTBEAT_SECONDS = 15         # How often to print a "still monitoring" message
+UPDATE_INTERVAL_SECONDS = 3600  # Data only changes once/day on the free tier, so check hourly
+HEARTBEAT_SECONDS = 15          # How often to print a "still monitoring" message
 
 
 def get_data():
-    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&interval=5min&apikey={api_key}"
+    url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&apikey={api_key}"
     response = requests.get(url)
     data = response.json()
 
-    if 'Error Message' in data or 'Time Series (5min)' not in data:
+    if 'Error Message' in data or 'Time Series (Daily)' not in data:
         return None
 
-    time_series = data['Time Series (5min)']
+    time_series = data['Time Series (Daily)']
 
     records = []
-    for timestamp in time_series:
-        entry = time_series[timestamp]
+    for day in time_series:
+        entry = time_series[day]
         records.append({
-            'Date': timestamp,
+            'Date': day,
             'Open': float(entry['1. open']),
             'High': float(entry['2. high']),
             'Low': float(entry['3. low']),
@@ -45,7 +45,7 @@ def update():
     try:
         df = get_data()
         if df is None:
-            print("API error, rate limit reached, or market closed with no fresh data. Retrying next cycle...")
+            print("API error or rate limit reached. Retrying next cycle...")
             return None
 
         mc = mpf.make_marketcolors(up='#26a69a', down='#ef5350', inherit=True)
@@ -58,7 +58,7 @@ def update():
             style=style,
             mav=(20, 50),
             volume=True,
-            title=f"\n{symbol} - Rocket Lab Stock Price (5min intraday)",
+            title=f"\n{symbol} - Rocket Lab Stock Price",
             ylabel='Price (USD)',
             ylabel_lower='Volume',
             returnfig=True,
