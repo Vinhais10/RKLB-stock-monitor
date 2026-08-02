@@ -2,6 +2,8 @@ import requests
 import pandas as pd
 import mplfinance as mpf
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from matplotlib.ticker import MaxNLocator
 import time
 from config import API_KEY
 
@@ -41,6 +43,20 @@ def get_data():
     return df
 
 
+def calculate_rsi(df, period=14):
+    delta = df['Close'].diff()
+    gains = delta.where(delta > 0, 0)
+    losses = -delta.where(delta < 0, 0)
+
+    avg_gain = gains.rolling(window=period).mean()
+    avg_loss = losses.rolling(window=period).mean()
+
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+
+    return rsi
+
+
 def update():
     try:
         df = get_data()
@@ -48,9 +64,21 @@ def update():
             print("API error or rate limit reached. Retrying next cycle...")
             return None, None
 
+        df['RSI'] = calculate_rsi(df)
+        current_rsi = df['RSI'].iloc[-1]
+
+        if current_rsi > 70:
+            rsi_label = "OVERBOUGHT"
+        elif current_rsi < 30:
+            rsi_label = "OVERSOLD"
+        else:
+            rsi_label = "NEUTRAL"
+
         mc = mpf.make_marketcolors(up='#26a69a', down='#ef5350', inherit=True)
         style = mpf.make_mpf_style(base_mpf_style='yahoo', marketcolors=mc,
                                     gridstyle='--', gridcolor='#dddddd')
+
+        rsi_plot = mpf.make_addplot(df['RSI'], panel=2, color='#7e57c2', ylabel='RSI')
 
         fig, axlist = mpf.plot(
             df,
@@ -58,14 +86,37 @@ def update():
             style=style,
             mav=(20, 50),
             volume=True,
+            addplot=rsi_plot,
+            panel_ratios=(6, 2, 2),
             title=f"\n{symbol} - Rocket Lab Stock Price",
             ylabel='Price (USD)',
             ylabel_lower='Volume',
             returnfig=True,
-            figsize=(14, 8)
+            figsize=(14, 9)
         )
 
         ax_price = axlist[0]
+        ax_volume = axlist[2]
+        ax_rsi = axlist[4]
+
+        ax_price.yaxis.set_major_locator(MaxNLocator(nbins=14))
+        ax_price.grid(True, linestyle='--', alpha=0.4)
+
+        ax_volume.yaxis.set_major_locator(MaxNLocator(nbins=6))
+        ax_volume.grid(True, linestyle='--', alpha=0.4)
+
+        ax_rsi.set_yticks(range(0, 101, 10))
+        ax_rsi.grid(True, linestyle='--', alpha=0.4)
+
+        for ax in [ax_price, ax_volume]:
+            pos = ax.get_position()
+            divider = Line2D([pos.x0, pos.x1], [pos.y0, pos.y0],
+                              transform=fig.transFigure, color='black', linewidth=1.5)
+            fig.add_artist(divider)
+
+        ax_rsi.axhline(70, color='#cc0000', linestyle='--', linewidth=0.8, alpha=0.6)
+        ax_rsi.axhline(30, color='#00994d', linestyle='--', linewidth=0.8, alpha=0.6)
+        ax_rsi.set_ylim(0, 100)
 
         current_price = df['Close'].iloc[-1]
         previous_close = df['Close'].iloc[-2]
@@ -73,8 +124,10 @@ def update():
         change_color = "#00994d" if daily_change_pct >= 0 else "#cc0000"
         change_sign = "+" if daily_change_pct >= 0 else ""
 
-        badge_text = f"{symbol}\n${current_price:.2f}  {change_sign}{daily_change_pct:.2f}% (1d)"
-        ax_price.text(0.01, 0.97, badge_text, transform=ax_price.transAxes, fontsize=12,
+        badge_text = (f"{symbol}\n"
+                      f"${current_price:.2f}  {change_sign}{daily_change_pct:.2f}% (1d)\n"
+                      f"RSI(14): {current_rsi:.1f} - {rsi_label}")
+        ax_price.text(0.01, 0.97, badge_text, transform=ax_price.transAxes, fontsize=11,
                       verticalalignment='top', color=change_color, fontweight='bold',
                       bbox=dict(boxstyle="round,pad=0.5", facecolor="white",
                                 edgecolor=change_color, linewidth=1.3))
@@ -83,7 +136,9 @@ def update():
             'price': current_price,
             'change_pct': daily_change_pct,
             'volume': df['Volume'].iloc[-1],
-            'last_date': df.index[-1].strftime('%Y-%m-%d')
+            'last_date': df.index[-1].strftime('%Y-%m-%d'),
+            'rsi': current_rsi,
+            'rsi_label': rsi_label
         }
 
         return fig, summary
@@ -110,11 +165,18 @@ if __name__ == "__main__":
             current_fig, summary = update()
 
             if current_fig is not None:
+                try:
+                    mng = current_fig.canvas.manager
+                    mng.window.state('zoomed')
+                except Exception:
+                    pass
+
                 sign = "+" if summary['change_pct'] >= 0 else ""
                 print(f"Chart updated at {time.strftime('%H:%M:%S')} "
                       f"| Last close ({summary['last_date']}): ${summary['price']:.2f} "
                       f"({sign}{summary['change_pct']:.2f}%) "
-                      f"| Volume: {summary['volume']/1e6:.1f}M")
+                      f"| Volume: {summary['volume']/1e6:.1f}M "
+                      f"| RSI: {summary['rsi']:.1f} ({summary['rsi_label']})")
 
             plt.pause(0.5)
 
@@ -131,4 +193,3 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Unexpected error: {e}. Retrying in {UPDATE_INTERVAL_SECONDS}s")
             time.sleep(UPDATE_INTERVAL_SECONDS)
-
