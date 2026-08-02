@@ -48,12 +48,13 @@ The script fetches daily price data from Alpha Vantage, structures it into a pan
 Planned features for future versions:
 
 - [ ] VWAP (Volume Weighted Average Price) indicator
-- [ ] RSI (Relative Strength Index)
+- [x] RSI (Relative Strength Index)
 - [ ] Bollinger Bands
 - [ ] High-of-day / Low-of-day markers
 - [ ] Live terminal dashboard (via `rich`)
 - [ ] Telegram bot integration for alerts
 - [ ] Modular project structure (`src/` package)
+- [ ] Unit tests
 
 ## Note
 
