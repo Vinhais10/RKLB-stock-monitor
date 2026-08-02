@@ -57,6 +57,15 @@ def calculate_rsi(df, period=14):
     return rsi
 
 
+def rsi_status(rsi_value):
+    if rsi_value < 30:
+        return "OVERSOLD"
+    elif rsi_value > 70:
+        return "OVERBOUGHT"
+    else:
+        return "NEUTRAL"
+
+
 def update():
     try:
         df = get_data()
@@ -66,13 +75,7 @@ def update():
 
         df['RSI'] = calculate_rsi(df)
         current_rsi = df['RSI'].iloc[-1]
-
-        if current_rsi > 70:
-            rsi_label = "OVERBOUGHT"
-        elif current_rsi < 30:
-            rsi_label = "OVERSOLD"
-        else:
-            rsi_label = "NEUTRAL"
+        rsi_label = rsi_status(current_rsi)
 
         mc = mpf.make_marketcolors(up='#26a69a', down='#ef5350', inherit=True)
         style = mpf.make_mpf_style(base_mpf_style='yahoo', marketcolors=mc,
