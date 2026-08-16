@@ -38,6 +38,14 @@ def calculate_vwap(df):
     return vwap
 
 
+def calculate_bollinger_bands(df, period=20):
+    middle = df['Close'].rolling(period).mean()
+    std = df['Close'].rolling(period).std()
+    upper = middle + (2 * std)
+    lower = middle - (2 * std)
+    return middle, upper, lower
+
+
 # --- Tests for the small helper functions ---
 assert is_oversold(24.9) == True
 assert is_overbought(84.9) == True
@@ -59,5 +67,17 @@ test_data_vwap = {
 test_df_vwap = pd.DataFrame(test_data_vwap)
 result_vwap = calculate_vwap(test_df_vwap)
 assert result_vwap.iloc[-1] == 100
+
+
+# --- Test for calculate_bollinger_bands using constant prices ---
+def test_bollinger_bands_constant_prices():
+    test_df = pd.DataFrame({'Close': [100.0] * 25})
+    middle, upper, lower = calculate_bollinger_bands(test_df, period=20)
+    assert middle.iloc[-1] == 100.0
+    assert upper.iloc[-1] == middle.iloc[-1]
+    assert lower.iloc[-1] == middle.iloc[-1]
+
+
+test_bollinger_bands_constant_prices()
 
 print("All tests passed!")

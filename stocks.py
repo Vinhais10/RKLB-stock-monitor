@@ -65,6 +65,20 @@ def calculate_vwap(df):
     return cumulative_tp_volume / cumulative_volume
 
 
+def calculate_bollinger_bands(df, period=20):
+    middle = df['Close'].rolling(period).mean()
+    std = df['Close'].rolling(period).std()
+    upper = middle + (2 * std)
+    lower = middle - (2 * std)
+    return middle, upper, lower
+
+
+def get_hod_lod(df):
+    hod = df['High'].iloc[-1]
+    lod = df['Low'].iloc[-1]
+    return hod, lod
+
+
 def rsi_status(rsi_value):
     if rsi_value < 30:
         return "OVERSOLD"
@@ -83,6 +97,11 @@ def update():
 
         df['RSI'] = calculate_rsi(df)
         df['VWAP'] = calculate_vwap(df)
+        bb_middle, bb_upper, bb_lower = calculate_bollinger_bands(df)
+        df['BB_upper'] = bb_upper
+        df['BB_lower'] = bb_lower
+        hod, lod = get_hod_lod(df)
+
         current_rsi = df['RSI'].iloc[-1]
         rsi_label = rsi_status(current_rsi)
 
@@ -91,7 +110,9 @@ def update():
                                     gridstyle='--', gridcolor='#dddddd')
 
         rsi_plot = mpf.make_addplot(df['RSI'], panel=2, color='#7e57c2', ylabel='RSI')
-        vwap_plot = mpf.make_addplot(df['VWAP'], panel=0, color='#9c27b0', width=1.2)
+        vwap_plot = mpf.make_addplot(df['VWAP'], panel=0, color='#9c27b0', width=1.2, label='VWAP')
+        bb_upper_plot = mpf.make_addplot(df['BB_upper'], panel=0, color='#90a4ae', linestyle='--', width=0.8, label='Bollinger Bands')
+        bb_lower_plot = mpf.make_addplot(df['BB_lower'], panel=0, color='#90a4ae', linestyle='--', width=0.8)
 
         fig, axlist = mpf.plot(
             df,
@@ -99,7 +120,7 @@ def update():
             style=style,
             mav=(20, 50),
             volume=True,
-            addplot=[rsi_plot, vwap_plot],
+            addplot=[rsi_plot, vwap_plot, bb_upper_plot, bb_lower_plot],
             panel_ratios=(6, 2, 2),
             title=f"\n{symbol} - Rocket Lab Stock Price",
             ylabel='Price (USD)',
@@ -112,13 +133,27 @@ def update():
         ax_volume = axlist[2]
         ax_rsi = axlist[4]
 
-        ax_price.yaxis.set_major_locator(MaxNLocator(nbins=14))
+        ax_price.axhline(hod, color='#2e7d32', linestyle=':', linewidth=1, alpha=0.7)
+        ax_price.axhline(lod, color='#c62828', linestyle=':', linewidth=1, alpha=0.7)
+
+        legend_elements = [
+            Line2D([0], [0], color='#1f77b4', lw=1.2, label='SMA 20'),
+            Line2D([0], [0], color='#ff7f0e', lw=1.2, label='SMA 50'),
+            Line2D([0], [0], color='#9c27b0', lw=1.2, label='VWAP'),
+            Line2D([0], [0], color='#90a4ae', lw=0.8, linestyle='--', label='Bollinger Bands'),
+            Line2D([0], [0], color='#2e7d32', lw=1, linestyle=':', label='HOD'),
+            Line2D([0], [0], color='#c62828', lw=1, linestyle=':', label='LOD'),
+        ]
+        ax_price.legend(handles=legend_elements, loc='upper right', fontsize=8, framealpha=0.9)
+
+        ax_price.yaxis.set_major_locator(MaxNLocator(nbins=7))
+        ax_price.yaxis.set_major_formatter(lambda x, pos: f"${x:.0f}")
         ax_price.grid(True, linestyle='--', alpha=0.4)
 
-        ax_volume.yaxis.set_major_locator(MaxNLocator(nbins=6))
+        ax_volume.yaxis.set_major_locator(MaxNLocator(nbins=4))
         ax_volume.grid(True, linestyle='--', alpha=0.4)
 
-        ax_rsi.set_yticks(range(0, 101, 10))
+        ax_rsi.set_yticks(range(0, 101, 20))
         ax_rsi.grid(True, linestyle='--', alpha=0.4)
 
         for ax in [ax_price, ax_volume]:
