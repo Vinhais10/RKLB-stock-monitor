@@ -57,6 +57,14 @@ def calculate_rsi(df, period=14):
     return rsi
 
 
+def calculate_vwap(df):
+    typical_price = (df['High'] + df['Low'] + df['Close']) / 3
+    tp_volume = typical_price * df['Volume']
+    cumulative_tp_volume = tp_volume.cumsum()
+    cumulative_volume = df['Volume'].cumsum()
+    return cumulative_tp_volume / cumulative_volume
+
+
 def rsi_status(rsi_value):
     if rsi_value < 30:
         return "OVERSOLD"
@@ -74,6 +82,7 @@ def update():
             return None, None
 
         df['RSI'] = calculate_rsi(df)
+        df['VWAP'] = calculate_vwap(df)
         current_rsi = df['RSI'].iloc[-1]
         rsi_label = rsi_status(current_rsi)
 
@@ -82,6 +91,7 @@ def update():
                                     gridstyle='--', gridcolor='#dddddd')
 
         rsi_plot = mpf.make_addplot(df['RSI'], panel=2, color='#7e57c2', ylabel='RSI')
+        vwap_plot = mpf.make_addplot(df['VWAP'], panel=0, color='#9c27b0', width=1.2)
 
         fig, axlist = mpf.plot(
             df,
@@ -89,7 +99,7 @@ def update():
             style=style,
             mav=(20, 50),
             volume=True,
-            addplot=rsi_plot,
+            addplot=[rsi_plot, vwap_plot],
             panel_ratios=(6, 2, 2),
             title=f"\n{symbol} - Rocket Lab Stock Price",
             ylabel='Price (USD)',
