@@ -34,8 +34,7 @@ def calculate_vwap(df):
     tp_volume = typical_price * df['Volume']
     cumulative_tp_volume = tp_volume.cumsum()
     cumulative_volume = df['Volume'].cumsum()
-    vwap = cumulative_tp_volume / cumulative_volume
-    return vwap
+    return cumulative_tp_volume / cumulative_volume
 
 
 def calculate_bollinger_bands(df, period=20):
@@ -44,6 +43,12 @@ def calculate_bollinger_bands(df, period=20):
     upper = middle + (2 * std)
     lower = middle - (2 * std)
     return middle, upper, lower
+
+
+def get_hod_lod(df):
+    hod = df['High'].iloc[-1]
+    lod = df['Low'].iloc[-1]
+    return hod, lod
 
 
 # --- Tests for the small helper functions ---
@@ -79,5 +84,14 @@ def test_bollinger_bands_constant_prices():
 
 
 test_bollinger_bands_constant_prices()
+
+# --- Test for get_hod_lod ---
+test_df_hodlod = pd.DataFrame({
+    'High': [100.5, 102.0, 105.0],
+    'Low': [98.0, 99.5, 101.5]
+})
+hod, lod = get_hod_lod(test_df_hodlod)
+assert hod == 105.0
+assert lod == 101.5
 
 print("All tests passed!")
