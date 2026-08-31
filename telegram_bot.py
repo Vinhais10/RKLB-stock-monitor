@@ -2,7 +2,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 from config import TELEGRAM_TOKEN, CHAT_ID
 from stocks import get_data, calculate_rsi, calculate_vwap, calculate_bollinger_bands, rsi_status
 import mplfinance as mpf
@@ -116,12 +116,24 @@ async def check_alerts(context: ContextTypes.DEFAULT_TYPE):
         print(f"No alert needed. RSI: {current_rsi:.1f} ({label}), change: {change_pct:.2f}%")
 
 
+async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "Unknown command. Use /help to see available commands."
+    )
+
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    print(f"Unhandled error: {context.error}")
+
+
 if __name__ == "__main__":
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).connect_timeout(30).read_timeout(30).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("price", price))
     app.add_handler(CommandHandler("chart", chart))
+    app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
+    app.add_error_handler(error_handler)
 
     app.job_queue.run_repeating(check_alerts, interval=ALERT_INTERVAL_SECONDS, first=10)
 
