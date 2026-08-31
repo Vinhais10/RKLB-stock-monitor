@@ -6,8 +6,7 @@ An automated Python tool that tracks Rocket Lab (RKLB) stock: renders technical 
 ![Status](https://img.shields.io/badge/status-active-brightgreen.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-![RKLB Chart](<img width="800" height="575" alt="RKLB CHART" src="https://github.com/user-attachments/assets/21be432c-d3ae-4fc8-aaf2-9df54cde5c2c" />
-)
+<img width="800" height="575" alt="RKLB Chart" src="https://github.com/user-attachments/assets/21be432c-d3ae-4fc8-aaf2-9df54cde5c2c" />
 
 ## Features
 
