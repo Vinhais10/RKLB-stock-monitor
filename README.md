@@ -45,17 +45,16 @@ The script fetches daily price data from Alpha Vantage, structures it into a pan
 
 ## Roadmap
 
-Planned features for future versions:
-
 - [x] VWAP (Volume Weighted Average Price) indicator
 - [x] RSI (Relative Strength Index)
 - [x] Bollinger Bands
-- [ ] High-of-day / Low-of-day markers
+- [x] High-of-day / Low-of-day markers
+- [x] Unit tests
+- [x] Telegram bot (`/price`, `/chart`, `/help`)
+- [x] Automatic alerts (RSI overbought/oversold, daily price moves ≥5%)
+- [ ] 24/7 hosting — infrastructure ready on Oracle Cloud (Always Free tier: VCN, subnet, SSH key configured), pending shape capacity availability in the region
 - [ ] Live terminal dashboard (via `rich`)
-- [ ] Telegram bot integration for alerts
 - [ ] Modular project structure (`src/` package)
-- [ ] Unit tests
-
 ## Note
 
 This project uses the free tier of the Alpha Vantage API (25 requests/day, end-of-day data only). Real-time/intraday data requires a paid plan.
