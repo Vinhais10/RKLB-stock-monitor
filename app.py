@@ -75,6 +75,7 @@ st.markdown(
 # API KEY LOADER (env local OR Streamlit secrets)
 # ============================================================
 def get_api_key():
+    """Read API_KEY from .env locally, or Streamlit secrets in the cloud."""
     key = os.environ.get("API_KEY")
     if key:
         return key
@@ -370,4 +371,5 @@ st.divider()
 st.subheader("📋 Recent data")
 recent = df.tail(10).iloc[::-1][["Open", "High", "Low", "Close", "Volume", "RSI"]].round(2)
 st.dataframe(recent, use_container_width=True)
+
 
