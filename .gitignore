@@ -4,5 +4,4 @@ __pycache__/
 *.pyc
 *.key
 .env
-chart.png
 .env
