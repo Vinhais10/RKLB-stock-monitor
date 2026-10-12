@@ -168,12 +168,6 @@ Pull requests are welcome. For major changes, please open an issue first.
 
 This project is licensed under the MIT License.
 
-## Acknowledgements
-
-- Alpha Vantage (https://www.alphavantage.co/) for the free market data API
-- Streamlit (https://streamlit.io/) for the dashboard framework
-- Plotly (https://plotly.com/) for the interactive charts
-
 ---
 
 Built as part of a self-directed Python learning project, applying real-world data analysis to financial markets.
