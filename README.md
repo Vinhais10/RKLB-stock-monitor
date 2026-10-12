@@ -15,19 +15,19 @@ An automated Python tool that tracks **Rocket Lab (RKLB)** stock with live candl
 
 ### 1. KPIs and main chart
 
-![Dashboard](dashboard.png)
+![Dashboard](screenshots/dashboard.png)
 
 ### 2. Full technical chart (part 1) — candlesticks, SMAs, and Bollinger Bands
 
-![Chart 1](chart.png)
+![Chart 1](screenshots/chart.png)
 
 ### 2. Full technical chart (part 2) — volume
 
-![Chart 2](chart2.png)
+![Chart 2](screenshots/chart2.png)
 
 ### 3. Recent data table
 
-![Table](table.png)
+![Table](screenshots/table.png)
 
 ---
 
